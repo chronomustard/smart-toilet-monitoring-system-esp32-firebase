@@ -1,7 +1,5 @@
 # Air Monitoring System using ESP32, Air Sensor, and Firebase
 
-![Project Image](link_to_project_image.jpg)
-
 This project aims to create an air monitoring system using an ESP32 microcontroller, an air sensor, and Firebase for data storage and retrieval. The system continuously measures air quality parameters and sends this data to a Firebase database for real-time monitoring and analysis.
 
 ## Components Used
