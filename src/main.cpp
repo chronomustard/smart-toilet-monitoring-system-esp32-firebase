@@ -1,10 +1,4 @@
-/*
-  Rui Santos
-  Complete project details at our blog: https://RandomNerdTutorials.com/esp32-data-logging-firebase-realtime-database/
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
+#include "MQ135.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
@@ -30,18 +24,13 @@
 // Insert RTDB URLefine the RTDB URL
 #define DATABASE_URL "https://monitoring-udara-ftui-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
+#define MQ_PIN 4  //gas sensor
+#define AO 34     //sound sensor
+
 // Define Firebase objects
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
-
-//Piezo
-const int piezoplus = 35;
-const int piezosign = 34;
-
-//Ultrasonic
-const int trigPin = 19;
-const int echoPin = 18;
 
 // Variable to save USER UID
 String uid;
@@ -61,17 +50,12 @@ FirebaseJson json;
 
 const char* ntpServer = "pool.ntp.org";
 
-//define sound speed in cm/uS
-#define SOUND_SPEED 0.034
-#define CM_TO_INCH 0.393701
-
-long duration;
-float distanceCm;
-float distanceInch;
+unsigned int output;
+int Decibels;
 
 // Timer variables (send new readings every three minutes)
 unsigned long sendDataPrevMillis = 0;
-unsigned long timerDelay = 180000;
+unsigned long timerDelay = 1000*50;
 
 // Initialize WiFi
 void initWiFi() {
@@ -99,10 +83,9 @@ unsigned long getTime() {
 
 void setup(){
   Serial.begin(115200);
-
-  //Ultrasonic Settings
-  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
-  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  pinMode (MQ_PIN, INPUT);
+  pinMode (AO, INPUT);
+  delay(5000);
 
   initWiFi();
   configTime(0, 0, ntpServer);
@@ -144,38 +127,53 @@ void setup(){
   databasePath = "/UsersData/" + uid + "/readings";
 }
 
-void loop(){
+void loop() {
+  MQ135 gasSensor = MQ135(MQ_PIN);
+  float air_quality = gasSensor.getPPM();
+  Serial.print("Air Quality ");
+  Serial.print(air_quality);
+  Serial.println("  PPM");
 
-  // Clears the trigPin
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(echoPin, HIGH);
-  
-  // Calculate the distance
-  distanceCm = duration * SOUND_SPEED/2;
-  
-  // Prints the distance in the Serial Monitor
-  Serial.print("Distance (cm): ");
-  Serial.println(distanceCm);
+  unsigned long start_time = millis(); 
+  float PeakToPeak = 0;  
+  unsigned int maximum_signal = 0;  //minimum value
+  unsigned int minimum_signal = 4095;  //maximum value
+  while (millis() - start_time < 50)
+  {
+    output = analogRead(AO);  
+    if (output < 4095)  
+    {
+      if (output > maximum_signal)
+      {
+        maximum_signal = output;  
+      }
+      else if (output < minimum_signal)
+      {
+        minimum_signal = output; 
+      }
+    }
+  }
+
+  delay(100);
+
+  PeakToPeak = maximum_signal - minimum_signal; 
+  //Serial.println(PeakToPeak);
+  Decibels = map(PeakToPeak, 50, 500, 49.5, 90);  
+  Serial.println(Decibels);
+
+  timestamp = getTime();
+  Serial.print ("time: ");
+  Serial.println (timestamp);
 
   // Send new readings to database
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0)){
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0 && humanpresence == 1)){
     sendDataPrevMillis = millis();
 
-    //Get current timestamp
-    timestamp = getTime();
-    Serial.print ("time: ");
-    Serial.println (timestamp);
-
+    // Prints the distance in the Serial Monitor
     parentPath= databasePath + "/" + String(timestamp);
 
-    json.set(rangePath.c_str(), String(distanceCm));
+    json.set(rangePath.c_str(), String(air_quality));
+    json.set(flushPath.c_str(), String(Decibels));
     json.set(timePath, String(timestamp));
     Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, parentPath.c_str(), &json) ? "ok" : fbdo.errorReason().c_str());
   }
