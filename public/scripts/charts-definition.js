@@ -4,7 +4,6 @@ window.addEventListener('load', onload);
 function onload(event){
   chartT = createTemperatureChart();
   chartH = createHumidityChart();
-  chartP = createPressureChart();
 }
 
 // Create Temperature Chart
@@ -16,7 +15,7 @@ function createTemperatureChart() {
     },
     series: [
       {
-        name: 'MQ135 Gas Sensor'
+        name: 'Toilet Usage'
       }
     ],
     title: { 
@@ -39,7 +38,7 @@ function createTemperatureChart() {
     },
     yAxis: {
       title: { 
-        text: 'Particles Per Meter' 
+        text: 'Toilet Usage' 
       }
     },
     credits: { 
@@ -57,7 +56,7 @@ function createHumidityChart(){
       type: 'spline'  
     },
     series: [{
-      name: 'Noise Sensor'
+      name: 'Flush Usage'
     }],
     title: { 
       text: undefined
@@ -79,7 +78,7 @@ function createHumidityChart(){
     },
     yAxis: {
       title: { 
-        text: 'Noise (dB)' 
+        text: 'Flush Usage' 
       }
     },
     credits: { 

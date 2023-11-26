@@ -52,6 +52,11 @@ function epochToJsDate(epochTime){
   const humElement = document.getElementById("hum");
   const updateElement = document.getElementById("lastUpdate")
   
+  var totalFlush = 0;
+  var totalPeople = 0;
+  var chartTotalFlush = 0;
+  var chartTotalPeople = 0;
+
   // MANAGE LOGIN/LOGOUT UI
   const setupUI = (user) => {
     if (user) {
@@ -76,9 +81,15 @@ function epochToJsDate(epochTime){
   
       // CHARTS
       // Number of readings to plot on charts
-      var chartRange = 0;
+      var chartRange = 0;   
+
       // Get number of readings to plot saved on database (runs when the page first loads and whenever there's a change in the database)
       chartRef.on('value', snapshot =>{
+        chartTotalFlush = 0;
+        chartTotalPeople = 0;
+        totalFlush = 0;
+        totalPeople = 0;
+
         chartRange = Number(snapshot.val());
         console.log(chartRange);
         // Delete all data from charts to update with new values when a new range is selected
@@ -90,14 +101,20 @@ function epochToJsDate(epochTime){
         // Update the charts with the new range
         // Get the latest readings and plot them on charts (the number of plotted readings corresponds to the chartRange value)
         dbRef.orderByKey().limitToLast(chartRange).on('child_added', snapshot =>{
-          var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
+          var jsonData = snapshot.val(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
           // Save values on variables
-          var temperature = jsonData.range; //change this
-          var humidity = jsonData.range; //change this
+          var temperature = Number.parseInt(jsonData.people);
+          var humidity = Number.parseInt(jsonData.flush);
           var timestamp = jsonData.timestamp;
+          // Check if both values are integers (valid numbers)
+          if (!Number.isNaN(temperature) && !Number.isNaN(humidity)) {
+            // Accumulate values
+            chartTotalFlush += temperature;
+            chartTotalPeople += humidity;
+          }
           // Plot the values on the charts
-          plotValues(chartT, timestamp, temperature);
-          plotValues(chartH, timestamp, humidity);
+          plotValues(chartT, timestamp, chartTotalFlush);
+          plotValues(chartH, timestamp, chartTotalPeople);
         });
       });
   
@@ -128,23 +145,39 @@ function epochToJsDate(epochTime){
   
       // CARDS
       // Get the latest readings and display on cards
-      dbRef.orderByKey().limitToLast(1).on('child_added', snapshot =>{
-        var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
-        var temperature = jsonData.range; //change this
-        var humidity = jsonData.range; //change this
-        var timestamp = jsonData.timestamp;
-        // Update DOM elements
-        tempElement.innerHTML = temperature;
-        humElement.innerHTML = humidity;
-        updateElement.innerHTML = epochToDateTime(timestamp);
+
+
+      dbRef.orderByKey().on('child_added', snapshot => {
+        var jsonData = snapshot.val(); // Accessing snapshot value directly
+
+        // Parse values as integers
+        var temperature = Number.parseInt(jsonData.people);
+        var humidity = Number.parseInt(jsonData.flush);
+
+        // Check if both values are integers (valid numbers)
+        if (!Number.isNaN(temperature) && !Number.isNaN(humidity)) {
+          // Accumulate values
+          totalFlush += temperature;
+          totalPeople += humidity;
+
+          // Update DOM elements
+          tempElement.innerHTML = totalFlush;
+          humElement.innerHTML = totalPeople;
+          updateElement.innerHTML = epochToDateTime(jsonData.timestamp);
+
+          // Log data for verification
+          console.log(jsonData);
+          console.log(totalFlush);
+        }
       });
   
+      
       // GAUGES
       // Get the latest readings and display on gauges
       dbRef.orderByKey().limitToLast(1).on('child_added', snapshot =>{
         var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
-        var temperature = jsonData.range; //change this
-        var humidity = jsonData.range; //change this
+        var temperature = jsonData.people; //change this
+        var humidity = jsonData.flush; //change this
         var timestamp = jsonData.timestamp;
         // Update DOM elements
         var gaugeT = createTemperatureGauge();
@@ -180,8 +213,8 @@ function epochToJsDate(epochTime){
           if (snapshot.exists()) {
             var jsonData = snapshot.toJSON();
             console.log(jsonData);
-            var temperature = jsonData.range;
-            var humidity = jsonData.humidity;
+            var temperature = jsonData.people;
+            var humidity = jsonData.flush;
             var timestamp = jsonData.timestamp;
             var content = '';
             content += '<tr>';

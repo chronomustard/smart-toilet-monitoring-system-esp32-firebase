@@ -208,6 +208,8 @@ void loop() {
   // Send new readings to database
   if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0) && resetSend == 1){
     sendDataPrevMillis = millis();
+    
+    resetSend = 0;
 
     // Prints the distance in the Serial Monitor
     parentPath= databasePath + "/" + String(timestamp);

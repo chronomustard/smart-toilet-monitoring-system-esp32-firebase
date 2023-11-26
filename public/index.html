@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ESP Datalogging Firebase App</title>
+    <title>Toilet Monitoring System</title>
 
     <!-- include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
@@ -53,7 +53,7 @@
 
     <!--TOP BAR-->
     <div class="topnav">
-      <h1>Dashboard Monitoring Udara FTUI</h1>
+      <h1>Toilet Monitoring System Dashboard</h1>
     </div>
 
     <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
@@ -91,13 +91,13 @@
         <div class="cards">
           <!--TEMPERATURE-->
           <div class="card">
-            <p><i class="fa fa-industry" style="color:rgb(15, 15, 15);"></i> Air Quality</p>
-            <p><span class="reading"><span id="temp"></span> PPM</span></p>
+            <p><i class="fa fa-users" style="color:rgb(15, 15, 15);"></i> Number of Use</p>
+            <p><span class="reading"><span id="temp"></span></span></p>
           </div>
           <!--HUMIDITY-->
           <div class="card">
-            <p><i class="fa fa-volume-up" style="color:rgb(15, 15, 15);"></i> Noise</p>
-            <p><span class="reading"><span id="hum"></span> dB</span></p>
+            <p><i class="fa fa-tint" style="color:rgb(15, 15, 15);"></i> Number of Flush</p>
+            <p><span class="reading"><span id="hum"></span></span></p>
           </div>
         </div>
       </div>
@@ -112,14 +112,14 @@
         <!--TEMPERATURE-CHART-->
         <div class="cards">
           <div class="card">
-            <p><i class="fa fa-industry" style="color:rgb(15, 15, 15);"></i> Air Quality Historical Data</p>
+            <p><i class="fa fa-users" style="color:rgb(15, 15, 15);"></i> Number of Use Historical Data</p>
             <div id="chart-temperature" class="chart-container"></div>
           </div>
         </div>
         <!--HUMIDITY-CHART-->
         <div class="cards">
           <div class="card">
-            <p><i class="fa fa-volume-up" style="color:rgb(15, 15, 15);"></i> Noise Historical Data</p>
+            <p><i class="fa fa-tint" style="color:rgb(15, 15, 15);"></i> Number of Flush Historical Data</p>
             <div id="chart-humidity" class="chart-container"></div>
           </div>
         </div>
@@ -155,8 +155,8 @@
         <table id="readings-table">
             <tr id="theader">
               <th>Timestamp</th>
-              <th>Air Quality (PPM)</th>
-              <th>Noise (dB)</th>
+              <th>Number of Use</th>
+              <th>Number of Flush</th>
             </tr>
             <tbody id="tbody">
             </tbody>
