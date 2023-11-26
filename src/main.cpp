@@ -1,4 +1,3 @@
-#include "MQ135.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
@@ -11,26 +10,47 @@
 #include "addons/RTDBHelper.h"
 
 // Insert your network credentials
-#define WIFI_SSID "Ciki"
-#define WIFI_PASSWORD "kiky123321"
+#define WIFI_SSID "Redmi 10"
+#define WIFI_PASSWORD "12345678"
 
 // Insert Firebase project API Key
-#define API_KEY "AIzaSyCRcHHsibK-mdwIet-L-MNpXncMLykb2SA"
+#define API_KEY "AIzaSyDGkMzKa2MkGnN-UmyIoXhowNT9OD0HE6s"
 
 // Insert Authorized Email and Corresponding Password
 #define USER_EMAIL "rickypapudi@gmail.com"
-#define USER_PASSWORD "monitoringudaraftui"
+#define USER_PASSWORD "etikakamarmandi"
 
 // Insert RTDB URLefine the RTDB URL
-#define DATABASE_URL "https://monitoring-udara-ftui-default-rtdb.asia-southeast1.firebasedatabase.app/"
-
-#define MQ_PIN 4  //gas sensor
-#define AO 34     //sound sensor
+#define DATABASE_URL "https://etika-kamar-mandi-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 // Define Firebase objects
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
+
+const int trigPin = 19;
+const int echoPin = 18;
+
+const int sigPiezo = 34;
+
+//define sound speed in cm/uS
+#define SOUND_SPEED 0.034
+#define CM_TO_INCH 0.393701
+
+long duration;
+float distanceCm;
+
+int flagFlush;
+
+int countPeople;
+int countFlush;
+
+int countPeople_data;
+int countFlush_data;
+
+int peopleDetect;
+int resetSend;
+int piezoval;
 
 // Variable to save USER UID
 String uid;
@@ -39,7 +59,7 @@ String uid;
 String databasePath;
 // Database child nodes
 String flushPath = "/flush";
-String rangePath = "/range";
+String peoplePath = "/people";
 String timePath = "/timestamp";
 
 // Parent Node (to be updated in every loop)
@@ -55,7 +75,7 @@ int Decibels;
 
 // Timer variables (send new readings every three minutes)
 unsigned long sendDataPrevMillis = 0;
-unsigned long timerDelay = 1000*50;
+unsigned long timerDelay = 1000*30;
 
 // Initialize WiFi
 void initWiFi() {
@@ -83,9 +103,12 @@ unsigned long getTime() {
 
 void setup(){
   Serial.begin(115200);
-  pinMode (MQ_PIN, INPUT);
-  pinMode (AO, INPUT);
-  delay(5000);
+
+  //Ultrasonic Settings
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  pinMode(sigPiezo, INPUT); // Sets piezo as an Input
+  delay(500);
 
   initWiFi();
   configTime(0, 0, ntpServer);
@@ -128,52 +151,69 @@ void setup(){
 }
 
 void loop() {
-  MQ135 gasSensor = MQ135(MQ_PIN);
-  float air_quality = gasSensor.getPPM();
-  Serial.print("Air Quality ");
-  Serial.print(air_quality);
-  Serial.println("  PPM");
+  //Ultrasonic reading
 
-  unsigned long start_time = millis(); 
-  float PeakToPeak = 0;  
-  unsigned int maximum_signal = 0;  //minimum value
-  unsigned int minimum_signal = 4095;  //maximum value
-  while (millis() - start_time < 50)
-  {
-    output = analogRead(AO);  
-    if (output < 4095)  
-    {
-      if (output > maximum_signal)
-      {
-        maximum_signal = output;  
-      }
-      else if (output < minimum_signal)
-      {
-        minimum_signal = output; 
-      }
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+  piezoval = analogRead(sigPiezo);
+  delay(500);
+
+  // Calculate the distance
+  distanceCm = duration * SOUND_SPEED/2;
+  
+  // Prints the distance in the Serial Monitor
+  Serial.print("Distance (cm): ");
+  Serial.println(distanceCm);
+
+  Serial.print("Piezo (value): ");
+  Serial.println(piezoval);
+
+  if (distanceCm < 60){
+    resetSend = 0;
+    peopleDetect = 1;
+
+    Serial.print("\n--- PERSON DETECTED ---");
+    
+    if (piezoval > 30){
+      flagFlush = 1;
+      Serial.print("\n--- FLUSH DETECTED ---");
     }
   }
 
-  delay(100);
-
-  PeakToPeak = maximum_signal - minimum_signal; 
-  //Serial.println(PeakToPeak);
-  Decibels = map(PeakToPeak, 50, 500, 49.5, 90);  
-  Serial.println(Decibels);
+  else {
+    resetSend = 1;
+    Serial.print("\n--- NO PERSON ---");
+    if(peopleDetect == 1){
+      countPeople = countPeople_data + 1;
+      if(flagFlush == 1){
+        countFlush = countFlush_data + 1;
+      }
+    }
+    peopleDetect = 0;
+    flagFlush = 0;
+  }
 
   timestamp = getTime();
   Serial.print ("time: ");
   Serial.println (timestamp);
 
   // Send new readings to database
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0 && humanpresence == 1)){
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > timerDelay || sendDataPrevMillis == 0) && resetSend == 1){
     sendDataPrevMillis = millis();
 
     // Prints the distance in the Serial Monitor
     parentPath= databasePath + "/" + String(timestamp);
 
-    json.set(rangePath.c_str(), String(air_quality));
-    json.set(flushPath.c_str(), String(Decibels));
+    json.set(peoplePath.c_str(), String(countPeople));
+    json.set(flushPath.c_str(), String(countFlush));
     json.set(timePath, String(timestamp));
     Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, parentPath.c_str(), &json) ? "ok" : fbdo.errorReason().c_str());
   }
