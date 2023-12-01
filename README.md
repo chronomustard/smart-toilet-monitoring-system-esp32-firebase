@@ -8,7 +8,7 @@ This project aims to develop a smart toilet monitoring system utilizing an HSC u
 
 - HSC Ultrasonic Sensor
 - Piezoelectric Sensor
-- ESP32 microcontroller
+- ESP32 DOIT DEVKIT V3 microcontroller
 - Firebase for real-time data storage and retrieval
 
 ## Features
