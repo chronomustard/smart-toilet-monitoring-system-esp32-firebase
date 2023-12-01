@@ -4,6 +4,8 @@ This project aims to develop a smart toilet monitoring system utilizing an HSC u
 
 ## Components Used
 
+![image](https://github.com/chronomustard/smart-toilet-monitoring-system-esp32-firebase/assets/70846916/834f7b4d-2c90-42cc-afba-b4e0b0c0f722)
+
 - HSC Ultrasonic Sensor
 - Piezoelectric Sensor
 - ESP32 microcontroller
