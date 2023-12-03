@@ -14,14 +14,14 @@
 #define WIFI_PASSWORD "12345678"
 
 // Insert Firebase project API Key
-#define API_KEY "AIzaSyDGkMzKa2MkGnN-UmyIoXhowNT9OD0HE6s"
+#define API_KEY ""
 
 // Insert Authorized Email and Corresponding Password
 #define USER_EMAIL "rickypapudi@gmail.com"
 #define USER_PASSWORD "etikakamarmandi"
 
 // Insert RTDB URLefine the RTDB URL
-#define DATABASE_URL "https://etika-kamar-mandi-default-rtdb.asia-southeast1.firebasedatabase.app/"
+#define DATABASE_URL ""
 
 // Define Firebase objects
 FirebaseData fbdo;
