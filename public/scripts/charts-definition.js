@@ -6,6 +6,12 @@ function onload(event){
   chartH = createHumidityChart();
 }
 
+Highcharts.setOptions({
+  time: {
+    timezoneOffset: -7 * 60
+  }
+});
+
 // Create Temperature Chart
 function createTemperatureChart() {
   var chart = new Highcharts.Chart({
@@ -23,7 +29,7 @@ function createTemperatureChart() {
     },
     plotOptions: {
       line: { 
-        animation: false,
+        animation: true,
         dataLabels: { 
           enabled: true 
         }
@@ -60,10 +66,10 @@ function createHumidityChart(){
     }],
     title: { 
       text: undefined
-    },    
+    },
     plotOptions: {
       line: { 
-        animation: false,
+        animation: true,
         dataLabels: { 
           enabled: true 
         }

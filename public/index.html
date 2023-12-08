@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Toilet Monitoring System</title>
 
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    
     <!-- include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
 
@@ -15,6 +18,14 @@
     <script>
       // Replace with your app config object
       const firebaseConfig = {
+        apiKey: "AIzaSyDGkMzKa2MkGnN-UmyIoXhowNT9OD0HE6s",
+        authDomain: "etika-kamar-mandi.firebaseapp.com",
+        databaseURL: "https://etika-kamar-mandi-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "etika-kamar-mandi",
+        storageBucket: "etika-kamar-mandi.appspot.com",
+        messagingSenderId: "453028184417",
+        appId: "1:453028184417:web:2adc60a4bb08a40d2a4520",
+        measurementId: "G-SFWXPBMB8V"
       };
 
       // Initialize firebase
@@ -42,124 +53,146 @@
   </head>
 
   <body>
-
-    <!--TOP BAR-->
-    <div class="topnav">
-      <h1>Toilet Monitoring System Dashboard</h1>
-    </div>
-
+    <nav class="navbar-dark py-3 container">
+      <div class="pt-2">
+        <div class="row">
+          <div class="col-12 col-lg-3 text-center">
+            <a href="index.html" class="navbar-brand">
+              <img src="https://giving.eng.ui.ac.id/static/img/logo-ftui.png" style="max-height: 55px;" alt="">
+          </a>
+          </div>
+          <div class="col-12 col-lg-9 text-center text-lg-end">
+            <div class="pt-4 pt-lg-3 medium-rp bold" id="navmenu">
+              <p>Smart Washroom System Dashboard</p>
+            </div>
+          </div>
+        </div>
+      </div>
+  </nav>
+  
     <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
     <div id="authentication-bar" style="display: none;">
-      <p><span id="authentication-status">User logged in</span>
-        <span id="user-details">USEREMAIL</span>
-        <a href="/" id="logout-link" style="color: #AA0114">(logout)</a>
-      </p>
+      <div class="container text-center pt-3 pb-1">
+        <p><span id="authentication-status">User logged in</span>
+          <span id="user-details">USEREMAIL</span>
+          <a href="/" id="logout-link" style="color: #AA0114">(logout)</a>
+        </p>
+      </div>
+      
     </div>
+    <div class="container text-center">
+      <!--LOGIN FORM-->
+      <form id="login-form" style="display: none;">
+        <div class="pt-5"></div>
+        <div class="pt-5"></div>
+        <div class="pt-5"></div>
+        <div class="form-elements-container">
+          <label for="input-email"><b>Email</b></label>
+          <input type="text" placeholder="Enter Username" id="input-email" required>
 
-    <!--LOGIN FORM-->
-    <form id="login-form" style="display: none;">
-      <div class="form-elements-container">
-        <label for="input-email"><b>Email</b></label>
-        <input type="text" placeholder="Enter Username" id="input-email" required>
+          <label for="input-password"><b>Password</b></label>
+          <input type="password" placeholder="Enter Password" id="input-password" required>
 
-        <label for="input-password"><b>Password</b></label>
-        <input type="password" placeholder="Enter Password" id="input-password" required>
-
-        <button type="submit" id="login-button">Login</button>
-        <p id="error-message" style="color:red;"></p>
-      </div>
-    </form>
-
-    <!--CONTENT (SENSOR READINGS)-->
-    <div class="content-sign-in" id="content-sign-in" style="display: none;">
-
-      <!--LAST UPDATE-->
-      <p><span class ="date-time">Last update: <span id="lastUpdate"></span></span></p>
-      <p>
-        Cards: <input type="checkbox" id="cards-checkbox" name="cards-checkbox" checked>
-        Charts: <input type="checkbox" id="charts-checkbox" name="charts-checkbox" unchecked>
-      </p>
-      <div id="cards-div">
-        <div class="cards">
-          <!--TEMPERATURE-->
-          <div class="card">
-            <p><i class="fa fa-users" style="color:rgb(15, 15, 15);"></i> Number of Use</p>
-            <p><span class="reading"><span id="temp"></span></span></p>
-          </div>
-          <!--HUMIDITY-->
-          <div class="card">
-            <p><i class="fa fa-tint" style="color:rgb(15, 15, 15);"></i> Number of Flush</p>
-            <p><span class="reading"><span id="hum"></span></span></p>
-          </div>
-        </div>
-      </div>
-
-
-      <!--CHARTS-->
-      <div id="charts-div" style="display:none">
-        <!--SET NUMBER OF READINGS INPUT FIELD-->
-        <div>
-          <p> Number of readings: <input type="number" id="charts-range"></p>
-        </div>
-        <!--TEMPERATURE-CHART-->
-        <div class="cards">
-          <div class="card">
-            <p><i class="fa fa-users" style="color:rgb(15, 15, 15);"></i> Number of Use Historical Data</p>
-            <div id="chart-temperature" class="chart-container"></div>
-          </div>
-        </div>
-        <!--HUMIDITY-CHART-->
-        <div class="cards">
-          <div class="card">
-            <p><i class="fa fa-tint" style="color:rgb(15, 15, 15);"></i> Number of Flush Historical Data</p>
-            <div id="chart-humidity" class="chart-container"></div>
-          </div>
-        </div>
-      </div>
-
-    <!--BUTTONS TO HANDLE DATA-->
-    <p>
-      <!--View data button-->
-      <button id="view-data-button">View all data</button>
-      <!--Hide data button-->
-      <button id="hide-data-button" style= "display:none;">Hide data</button>
-      <!--Delete data button-->
-      <button id="delete-button" class="deletebtn">Delete data</button>
-    </p>
-    <!--Modal to delete data-->
-    <div id="delete-modal" class="modal" sytle="display:none">
-      <span onclick = "document.getElementById('delete-modal').style.display='none'" class="close" title="Close Modal">×</span>
-      <form id= "delete-data-form" class="modal-content" action="/">
-        <div class="container">
-          <h1>Delete Data</h1>
-          <p>Are you sure you want to delete all data from database?</p>
-          <div class="clearfix">
-            <button type="button" onclick="document.getElementById('delete-modal').style.display='none'" class="cancelbtn">Cancel</button>
-            <button type="submit" onclick="document.getElementById('delete-modal').style.display='none'" class="deletebtn">Delete</button>
-          </div>
+          <button type="submit" id="login-button">Login</button>
+          <p id="error-message" style="color:red;"></p>
         </div>
       </form>
-    </div>
 
-    <!--TABLE WITH ALL DATA-->
-    <div class ="cards">
-      <div class="card" id="table-container" style= "display:none;">
-        <table id="readings-table">
-            <tr id="theader">
-              <th>Timestamp</th>
-              <th>Number of Use</th>
-              <th>Number of Flush</th>
-            </tr>
-            <tbody id="tbody">
-            </tbody>
-        </table>
-        <p><button id="load-data" style= "display:none;">More results...</button></p>
+      <!--CONTENT (SENSOR READINGS)-->
+      <div class="content-sign-in pt-3" id="content-sign-in" style="display: none;">
+
+        <!--LAST UPDATE-->
+        <p><span class ="date-time">Last update: <span id="lastUpdate"></span></span></p>
+        <p>
+          Cards: <input type="checkbox" id="cards-checkbox" name="cards-checkbox" checked>
+          Charts: <input type="checkbox" id="charts-checkbox" name="charts-checkbox" unchecked>
+        </p>
+        <div id="cards-div">
+          <div class="cards">
+            <!--TEMPERATURE-->
+            <div class="card pt-4">
+              <p><i class="fa fa-users" style="color:rgb(15, 15, 15);"></i> Number of Use</p>
+              <p><span class="reading"><span id="temp"></span></span></p>
+            </div>
+            <!--HUMIDITY-->
+            <div class="card pt-4">
+              <p><i class="fa fa-tint" style="color:rgb(15, 15, 15);"></i> Number of Flush</p>
+              <p><span class="reading"><span id="hum"></span></span></p>
+            </div>
+          </div>
+        </div>
+
+
+        <!--CHARTS-->
+        <div id="charts-div" style="display:none">
+          <!--SET NUMBER OF READINGS INPUT FIELD-->
+          <div class="pt-3 pb-2">
+            <p> Number of readings: <input type="number" id="charts-range"></p>
+          </div>
+          <!--TEMPERATURE-CHART-->
+          <div class="cards">
+            <div class="card">
+              <p><i class="fa fa-users" style="color:rgb(15, 15, 15);"></i> Number of Use Historical Data</p>
+              <div id="chart-temperature" class="chart-container"></div>
+            </div>
+          </div>
+          <!--HUMIDITY-CHART-->
+          <div class="cards">
+            <div class="card">
+              <p><i class="fa fa-tint" style="color:rgb(15, 15, 15);"></i> Number of Flush Historical Data</p>
+              <div id="chart-humidity" class="chart-container"></div>
+            </div>
+          </div>
+        </div>
+      <div class="p-1"></div>
+      <!--BUTTONS TO HANDLE DATA-->
+      <p>
+        <!--View data button-->
+        <button id="view-data-button">View all data</button>
+        <!--Hide data button-->
+        <button id="hide-data-button" style= "display:none;">Hide data</button>
+        <!--Delete data button-->
+        <button id="delete-button" class="deletebtn">Delete data</button>
+      </p>
+      <!--Modal to delete data-->
+      <div id="delete-modal" class="modal" sytle="display:none">
+        <span onclick = "document.getElementById('delete-modal').style.display='none'" class="close" title="Close Modal">×</span>
+        <form id= "delete-data-form" class="modal-content" action="/">
+          <div class="container">
+            <h1>Delete Data</h1>
+            <p>Are you sure you want to delete all data from database?</p>
+            <div class="clearfix">
+              <button type="button" onclick="document.getElementById('delete-modal').style.display='none'" class="cancelbtn">Cancel</button>
+              <button type="submit" onclick="document.getElementById('delete-modal').style.display='none'" class="deletebtn">Delete</button>
+            </div>
+          </div>
+        </form>
       </div>
-    </div>
+
+      <!--TABLE WITH ALL DATA-->
+      <div class ="cards">
+        <div class="card" id="table-container" style= "display:none;">
+          <table id="readings-table">
+              <tr id="theader">
+                <th>Timestamp</th>
+                <th>Number of Use</th>
+                <th>Number of Flush</th>
+              </tr>
+              <tbody id="tbody">
+              </tbody>
+          </table>
+          <div class="p-2"></div>
+          <p><button id="load-data" style= "display:none;">More results...</button></p>
+        </div>
+      </div>
 
   </div>
+    </div>
+    
 
     <!--INCLUDE JS FILES-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="scripts/auth.js"></script>
     <script src="scripts/charts-definition.js"></script>
     <script src="scripts/gauges-definition.js"></script>
