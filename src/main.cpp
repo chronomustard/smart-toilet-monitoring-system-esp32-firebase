@@ -3,6 +3,7 @@
 #include <Firebase_ESP_Client.h>
 #include <Wire.h>
 #include "time.h"
+#include <SoftwareSerial.h>
 
 // Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -23,6 +24,11 @@
 // Insert RTDB URLefine the RTDB URL
 #define DATABASE_URL ""
 
+// RX TX SIM800L
+SoftwareSerial sim800lSerial(RX_PIN, TX_PIN); // RX, TX
+#define SIM800L_RX 40
+#define SIM800L_TX 41
+
 // Define Firebase objects
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -31,7 +37,7 @@ FirebaseConfig config;
 const int trigPin = 19;
 const int echoPin = 18;
 
-const int sigPiezo = 34;
+// const int sigPiezo = 34; // DEPRECEATED FOR COMFORT
 
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
@@ -101,16 +107,82 @@ unsigned long getTime() {
   return now;
 }
 
+void connectToInternet() {
+  Serial.println("Connecting to internet...");
+  
+  sim800lSerial.println("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
+  delay(1000);
+  if (sim800lSerial.find("OK")) {
+    Serial.println("Connected to GPRS");
+    delay(1000);
+    
+    sim800lSerial.println("AT+SAPBR=1,1");
+    delay(3000);
+    if (sim800lSerial.find("OK")) {
+      Serial.println("Bearer is open");
+      delay(1000);
+      
+      sim800lSerial.println("AT+HTTPINIT");
+      delay(2000);
+      if (sim800lSerial.find("OK")) {
+        Serial.println("HTTP initialized");
+        delay(1000);
+        
+        // Set up your HTTP request here
+        sim800lSerial.println("AT+HTTPPARA=\"URL\",\"http://example.com\"");
+        delay(1000);
+        sim800lSerial.println("AT+HTTPACTION=0");
+        delay(5000);
+        if (sim800lSerial.find("+HTTPACTION:0,200")) {
+          Serial.println("HTTP request successful");
+          delay(1000);
+          
+          sim800lSerial.println("AT+HTTPREAD");
+          delay(1000);
+          while (sim800lSerial.available()) {
+            Serial.write(sim800lSerial.read());
+          }
+          sim800lSerial.println();
+        } else {
+          Serial.println("Error in HTTP request");
+        }
+      } else {
+        Serial.println("Error initializing HTTP");
+      }
+    } else {
+      Serial.println("Error opening bearer");
+    }
+  } else {
+    Serial.println("Error connecting to GPRS");
+  }
+}
+
 void setup(){
   Serial.begin(115200);
 
   //Ultrasonic Settings
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  pinMode(sigPiezo, INPUT); // Sets piezo as an Input
+  // pinMode(sigPiezo, INPUT); // Sets piezo as an Input (DEPRECEATED FOR COMFORT)
   delay(500);
 
-  initWiFi();
+  // initWiFi(); if Wifi
+  // if using SIM800L
+  sim800lSerial.begin(9600); // SIM800L communication
+  
+  delay(1000);
+  
+  Serial.println("Initializing SIM800L...");
+  sim800lSerial.println("AT"); // Test communication
+  delay(1000);
+  
+  if (sim800lSerial.find("OK")) {
+    Serial.println("SIM800L is ready");
+    delay(1000);
+    connectToInternet();
+  } else {
+    Serial.println("Error: SIM800L not responding.");
+  }
   configTime(0, 0, ntpServer);
 
   // Assign the api key (required)
@@ -163,7 +235,7 @@ void loop() {
 
   // Reads the echoPin, returns the sound wave travel time in microseconds
   duration = pulseIn(echoPin, HIGH);
-  piezoval = analogRead(sigPiezo);
+  // piezoval = analogRead(sigPiezo); // DEPRECEATED FOR COMFORT
   delay(500);
 
   // Calculate the distance
@@ -182,7 +254,14 @@ void loop() {
 
     Serial.print("\n--- PERSON DETECTED ---");
     
-    if (piezoval > 30){
+    /* OLD CODE (REVISI AGAR TIDAK MENGGANGGU PENGGUNA)
+    if (distanceCm < 30){ 
+      flagFlush = 1;
+      Serial.print("\n--- FLUSH DETECTED ---");
+    }
+    */
+
+    if (distanceCm < 20){ // Replace from piezo sensor for comfort
       flagFlush = 1;
       Serial.print("\n--- FLUSH DETECTED ---");
     }
